@@ -1,0 +1,13 @@
+using Microsoft.AspNetCore.Identity;
+
+namespace DemoBoard_server.Exceptions;
+
+public class IdentityUserCreationFailedException : Exception
+{
+    public IdentityUserCreationFailedException(IEnumerable<IdentityError> errors)
+    {
+        Errors = errors;
+    }
+
+    public IEnumerable<IdentityError> Errors { get; }
+}

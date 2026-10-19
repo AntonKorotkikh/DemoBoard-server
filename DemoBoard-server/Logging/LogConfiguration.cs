@@ -10,7 +10,7 @@ internal static class LogConfiguration
             .WriteTo.Console(
                 outputTemplate: "[{UtcTimestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level:u3}] {Message:lj}{NewLine}{Exception}"
             )
-            .WriteTo.File("log.txt",
+            .WriteTo.File(Path.Combine(AppContext.BaseDirectory, "log.txt"),
                 rollingInterval: RollingInterval.Month,
                 rollOnFileSizeLimit: true,
                 fileSizeLimitBytes: 200 * 1024 * 1024,

@@ -40,8 +40,9 @@ public class Program
         
         builder.Services.AddControllers();
         builder.Services.AddOpenApi();
-        
-        var connectionString = builder.Configuration.GetConnectionString("DemoBoard") ?? "Data Source=DemoBoard.db";
+
+        var databasePath = Path.Combine(AppContext.BaseDirectory, "DemoBoard.db");
+        var connectionString = builder.Configuration.GetConnectionString("DemoBoard") ?? $"Data Source={databasePath}";
         builder.Services.AddSqlite<DatabaseContext>(connectionString, optionsAction: options =>
             options.UseLazyLoadingProxies());
 

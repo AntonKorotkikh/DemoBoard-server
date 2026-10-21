@@ -24,7 +24,7 @@ public class VacancyService
 
     public async Task<long> AddAsync(VacancyCreationDTO vacancyCreationDTO)
     {
-        var company = await companyRepository.GetByAccountName(vacancyCreationDTO.CompanyAccountName);
+        var company = await companyRepository.GetByAccountNameAsync(vacancyCreationDTO.CompanyAccountName);
 
         var vacancyToAdd = new Vacancy()
         {
@@ -54,7 +54,7 @@ public class VacancyService
 
     public async Task UpdateAsync(VacancyUpdateDTO vacancyUpdateDTO)
     {
-        var company = await companyRepository.GetByAccountName(vacancyUpdateDTO.CompanyAccountName);
+        var company = await companyRepository.GetByAccountNameAsync(vacancyUpdateDTO.CompanyAccountName);
         
         var vacancyInDB = await repository.GetByIdAsync(vacancyUpdateDTO.Id);
         

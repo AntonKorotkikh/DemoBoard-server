@@ -113,7 +113,7 @@ namespace DemoBoard_server.Controllers
             var authorizationResult = await authorizationService.AuthorizeAsync(User, vacancy, "AccessPolicy");
             if (!authorizationResult.Succeeded)
             {
-                logger.LogInformation("POST api/Vacancy): denied access attempt by account {UserName}", User.Identity.Name);
+                logger.LogInformation("POST api/Vacancy: denied access attempt by account {UserName}", User.Identity.Name);
                 return Forbid();
             }
 

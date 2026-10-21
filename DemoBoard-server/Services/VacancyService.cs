@@ -52,16 +52,18 @@ public class VacancyService
         return recentVacanciesDTOs;
     }
 
-    public async Task UpdateAsync(VacancyDTO vacancyDTO)
+    public async Task UpdateAsync(VacancyUpdateDTO vacancyUpdateDTO)
     {
-        var company = await companyRepository.GetByIdAsync(vacancyDTO.Company.Id);
+        var company = await companyRepository.GetByAccountName(vacancyUpdateDTO.CompanyAccountName);
+        
+        var vacancyInDB = await repository.GetByIdAsync(vacancyUpdateDTO.Id);
         
         var updatedVacancy = new Vacancy()
         {
-            Id = vacancyDTO.Id,
-            Title = vacancyDTO.Title,
-            Description = vacancyDTO.Description,
-            TimeAdded = DateTime.UtcNow,
+            Id = vacancyUpdateDTO.Id,
+            Title = vacancyUpdateDTO.Title ?? vacancyInDB.Title,
+            Description = vacancyUpdateDTO.Description ?? vacancyInDB.Description,
+            TimeAdded = vacancyInDB.TimeAdded,
             Company = company
         };
         

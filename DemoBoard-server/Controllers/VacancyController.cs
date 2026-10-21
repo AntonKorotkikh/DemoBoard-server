@@ -72,7 +72,7 @@ namespace DemoBoard_server.Controllers
         // PUT: api/Vacancy/5
         [Authorize(Roles = "Admin, Company")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutVacancy(long id, VacancyDTO vacancy)
+        public async Task<IActionResult> PutVacancy(long id, VacancyUpdateDTO vacancy)
         {
             var authorizationResult = await authorizationService.AuthorizeAsync(User, vacancy, "AccessPolicy");
             if (!authorizationResult.Succeeded)
@@ -92,6 +92,11 @@ namespace DemoBoard_server.Controllers
                 await service.UpdateAsync(vacancy);
                 logger.LogInformation("PUT api/Vacancy/{RouteId}: updated ok", id);
                 return NoContent();
+            }
+            catch (ItemNotFoundException<Vacancy>)
+            {
+                logger.LogWarning("PUT api/Vacancy/{RouteId}: vacancy with this ID does not exist", id);
+                return NotFound();
             }
             catch (DbUpdateConcurrencyException e)
             {

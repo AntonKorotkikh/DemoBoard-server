@@ -53,6 +53,7 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddSingleton<IAuthorizationHandler, PersonAuthorizationHandler>();
         builder.Services.AddSingleton<IAuthorizationHandler, VacancyAuthorizationHandler>();
         builder.Services.AddSingleton<IAuthorizationHandler, VacancyCreationAuthorizationHandler>();
+        builder.Services.AddSingleton<IAuthorizationHandler, VacancyUpdateAuthorizationHandler>();
         
         builder.Services.Configure<IdentityOptions>(options =>
         {

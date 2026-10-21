@@ -25,7 +25,7 @@ public class CompanyController : ControllerBase
     }
     
     // GET: api/Company/5
-    [Authorize(Roles = "Admin, Company")]
+    [AllowAnonymous]
     [HttpGet("{id}")]
     public async Task<ActionResult<CompanyResponseDTO>> GetCompany(long id)
     {
@@ -43,13 +43,6 @@ public class CompanyController : ControllerBase
         {
             logger.LogError(e, "GET api/Company/{RouteId}: unexpected failure", id);
             return StatusCode(500, "Fetching the company failed unexpectedly");
-        }
-        
-        var authorizationResult = await authorizationService.AuthorizeAsync(User, company, "AccessPolicy");
-        if (!authorizationResult.Succeeded)
-        {
-            logger.LogInformation("GET api/Company/{id}): denied access attempt by account {UserName}", id, User.Identity.Name);
-            return Forbid();
         }
         
         return company;

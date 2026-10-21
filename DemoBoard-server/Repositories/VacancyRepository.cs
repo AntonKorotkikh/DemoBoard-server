@@ -19,7 +19,6 @@ public class VacancyRepository : Repository<Vacancy>
         
         vacancyInDB.Title = vacancy.Title;
         vacancyInDB.Description = vacancy.Description;
-        vacancyInDB.TimeAdded = vacancy.TimeAdded;
         vacancyInDB.Company = vacancy.Company;
 
         await context.SaveChangesAsync();

@@ -9,7 +9,7 @@ public class Company : IEntity
     public long Id { get; set; }
     public virtual required IdentityUser Account { get; set; }
     public string? LogoPath { get; set; }
-    public string BusinessName { get; set; }
+    public required string BusinessName { get; set; }
     
     public virtual List<Vacancy> PostedVacancies { get; set; }
 }

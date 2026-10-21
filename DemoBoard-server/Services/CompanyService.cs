@@ -56,7 +56,7 @@ public class CompanyService
             Id = existingCompany.Id,
             Account = account,
             LogoPath = companyUpdateDTO.LogoPath ?? existingCompany.LogoPath,
-            BusinessName = companyUpdateDTO.BusinessName
+            BusinessName = companyUpdateDTO.BusinessName ?? existingCompany.BusinessName
         };
         
         await repository.UpdateAsync(updatedCompany);

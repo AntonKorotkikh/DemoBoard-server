@@ -108,7 +108,7 @@ namespace DemoBoard_server.Controllers
         // POST: api/Vacancy
         [Authorize(Roles = "Admin, Company")]
         [HttpPost]
-        public async Task<ActionResult<VacancyDTO>> PostVacancy(VacancyDTO vacancy)     // no way for the company to know the company id at the moment
+        public async Task<ActionResult<VacancyDTO>> PostVacancy(VacancyCreationDTO vacancy)
         {
             var authorizationResult = await authorizationService.AuthorizeAsync(User, vacancy, "AccessPolicy");
             if (!authorizationResult.Succeeded)
@@ -116,16 +116,16 @@ namespace DemoBoard_server.Controllers
                 logger.LogInformation("POST api/Vacancy): denied access attempt by account {UserName}", User.Identity.Name);
                 return Forbid();
             }
-            
+
             try
             {
                 var addedVacancyId = await service.AddAsync(vacancy);
                 logger.LogInformation("POST api/Vacancy: added new vacancy ok (ID: {id})", addedVacancyId);
                 return CreatedAtAction(nameof(GetVacancy), new { id = addedVacancyId }, vacancy);
             }
-            catch (ItemNotFoundException<Company> e)
+            catch (ItemNotFoundException<Company>)
             {
-                logger.LogWarning("POST api/Vacancy: company with the specified ID ({CompanyId}) does not exist", vacancy.Company.Id);
+                logger.LogWarning("POST api/Vacancy: company with the specified account name ({CompanyAccountName}) does not exist", vacancy.CompanyAccountName);
                 return BadRequest();
             }
             catch (Exception e)

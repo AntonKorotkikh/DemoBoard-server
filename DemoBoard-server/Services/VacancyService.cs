@@ -22,15 +22,15 @@ public class VacancyService
         return ToDTO(vacancy);
     }
 
-    public async Task<long> AddAsync(VacancyDTO vacancyDTO)     // add a VacancyCreationDTO class so as not to pass the whole Company object
+    public async Task<long> AddAsync(VacancyCreationDTO vacancyCreationDTO)
     {
-        var company = await companyRepository.GetByIdAsync(vacancyDTO.Company.Id);
+        var company = await companyRepository.GetByAccountName(vacancyCreationDTO.CompanyAccountName);
 
         var vacancyToAdd = new Vacancy()
         {
-            Title = vacancyDTO.Title,
-            Description = vacancyDTO.Description,
-            TimeAdded = vacancyDTO.TimeAdded,
+            Title = vacancyCreationDTO.Title,
+            Description = vacancyCreationDTO.Description,
+            TimeAdded = DateTime.Now,
             Company = company
         };
 

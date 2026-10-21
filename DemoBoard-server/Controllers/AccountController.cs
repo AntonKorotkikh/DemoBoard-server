@@ -68,12 +68,6 @@ namespace DemoBoard_server.Controllers
         [HttpPatch("{id}")]
         public async Task<IActionResult> PatchAccountData(string id, AccountUpdateDTO account)
         {
-            if (id != account.Id)
-            {
-                logger.LogWarning("PATCH api/Account/{RouteId}: route ID does not match account ID {AccountId}", id, account.Id);
-                return BadRequest();
-            }
-            
             var authorizationResult = await authorizationService.AuthorizeAsync(User, account, "AccessPolicy");
             if (!authorizationResult.Succeeded)
             {
@@ -83,7 +77,7 @@ namespace DemoBoard_server.Controllers
 
             try
             {
-                await service.UpdateDataAsync(account);
+                await service.UpdateDataAsync(id, account);
                 logger.LogInformation("PATCH api/Account/{RouteId}: updated ok", id);
                 return NoContent();
             }

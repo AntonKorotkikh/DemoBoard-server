@@ -80,16 +80,10 @@ namespace DemoBoard_server.Controllers
                 logger.LogInformation("PUT api/Vacancy/{id}): denied access attempt by account {UserName}", id, User.Identity.Name);
                 return Forbid();
             }
-            
-            if (id != vacancy.Id)
-            {
-                logger.LogWarning("PUT api/Vacancy/{RouteId}: route ID does not match vacancy ID {VacancyId}", id, vacancy.Id);
-                return BadRequest();
-            }
 
             try
             {
-                await service.UpdateAsync(vacancy);
+                await service.UpdateAsync(id, vacancy);
                 logger.LogInformation("PUT api/Vacancy/{RouteId}: updated ok", id);
                 return NoContent();
             }

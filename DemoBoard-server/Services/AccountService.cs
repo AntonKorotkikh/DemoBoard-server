@@ -101,9 +101,9 @@ public class AccountService
         await userManager.DeleteAsync(user);
     }
 
-    public async Task UpdateDataAsync(AccountUpdateDTO accountUpdate)
+    public async Task UpdateDataAsync(string id, AccountUpdateDTO accountUpdate)
     {
-        var existingAccount = await userManager.FindByIdAsync(accountUpdate.Id);
+        var existingAccount = await userManager.FindByIdAsync(id);
         if (existingAccount == null)
             throw new ItemNotFoundException<IdentityUser>();
 
@@ -112,7 +112,7 @@ public class AccountService
         
         var updatedAccount = new IdentityUser()
         {
-            Id = accountUpdate.Id,
+            Id = id,
             UserName = updatedName,
             Email = updatedEmail
         };

@@ -8,5 +8,5 @@ public class VacancyDTO
     public required string Title { get; set; }
     public required string Description { get; set; }
     public required DateTime TimeAdded { get; set; }
-    public required CompanyDTO Company { get; set; }
+    public required CompanyResponseDTO Company { get; set; }
 }

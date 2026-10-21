@@ -49,7 +49,7 @@ public static class WebApplicationBuilderExtensions
                 policy.Requirements.Add(new SameAccountRequirement()));
 
         builder.Services.AddSingleton<IAuthorizationHandler, AccountAuthorizationHandler>();
-        builder.Services.AddSingleton<IAuthorizationHandler, CompanyAuthorizationHandler>();
+        builder.Services.AddSingleton<IAuthorizationHandler, CompanyUpdateAuthorizationHandler>();
         builder.Services.AddSingleton<IAuthorizationHandler, PersonAuthorizationHandler>();
         builder.Services.AddSingleton<IAuthorizationHandler, VacancyAuthorizationHandler>();
         builder.Services.AddSingleton<IAuthorizationHandler, VacancyCreationAuthorizationHandler>();

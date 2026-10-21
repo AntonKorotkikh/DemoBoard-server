@@ -7,7 +7,7 @@ public class VacancyAuthorizationHandler : AuthorizationHandler<SameAccountRequi
 {
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, SameAccountRequirement requirement, VacancyDTO resource)
     {
-        if (context.User.Identity?.Name == resource.Company.Account.UserName)
+        if (context.User.Identity?.Name == resource.Company.CompanyAccountName)
             context.Succeed(requirement);
 
         return Task.CompletedTask;

@@ -72,17 +72,10 @@ public class VacancyService
     
     private VacancyDTO ToDTO(Vacancy vacancy)
     {
-        var accountDTO = new AccountResponseDTO
-        {
-            Id = vacancy.Company.Account.Id,
-            UserName = vacancy.Company.Account.UserName!,
-            Email = vacancy.Company.Account.Email!
-        };
-
-        var companyDTO = new CompanyDTO
+        var companyDTO = new CompanyResponseDTO()
         {
             Id = vacancy.Company.Id,
-            Account = accountDTO,
+            CompanyAccountName = vacancy.Company.Account.UserName!,
             LogoPath = vacancy.Company.LogoPath,
             BusinessName = vacancy.Company.BusinessName
         };

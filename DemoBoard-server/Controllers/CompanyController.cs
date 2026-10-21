@@ -27,9 +27,9 @@ public class CompanyController : ControllerBase
     // GET: api/Company/5
     [Authorize(Roles = "Admin, Company")]
     [HttpGet("{id}")]
-    public async Task<ActionResult<CompanyDTO>> GetCompany(long id)
+    public async Task<ActionResult<CompanyResponseDTO>> GetCompany(long id)
     {
-        CompanyDTO company;
+        CompanyResponseDTO company;
         try
         {
             company = await service.GetByIdAsync(id);

@@ -109,13 +109,6 @@ namespace DemoBoard_server.Controllers
         [HttpPost]
         public async Task<ActionResult<VacancyDTO>> PostVacancy(VacancyCreationDTO vacancy)
         {
-            var authorizationResult = await authorizationService.AuthorizeAsync(User, vacancy, "AccessPolicy");
-            if (!authorizationResult.Succeeded)
-            {
-                logger.LogInformation("POST api/Vacancy: denied access attempt by account {UserName}", User.Identity.Name);
-                return Forbid();
-            }
-
             try
             {
                 var addedVacancyId = await service.AddAsync(vacancy);

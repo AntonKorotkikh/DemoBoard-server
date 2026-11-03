@@ -17,11 +17,9 @@ public class CompanyService
         this.userManager = userManager;
     }
 
-    public async Task<CompanyResponseDTO> GetByIdAsync(long id)
+    public async Task<Company> GetByIdAsync(long id)
     {
-        var company = await repository.GetByIdAsync(id);
-        
-        return ToDTO(company);
+        return await repository.GetByIdAsync(id);
     }
 
     public async Task<long> AddAsync(IdentityUser account, CompanyAccountCreationDTO company)

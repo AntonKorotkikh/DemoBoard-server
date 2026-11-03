@@ -15,11 +15,9 @@ public class VacancyService
         this.companyRepository = companyRepository;
     }
 
-    public async Task<VacancyDTO> GetByIdAsync(long id)
+    public async Task<Vacancy> GetByIdAsync(long id)
     {
-        var vacancy = await repository.GetByIdAsync(id);
-        
-        return ToDTO(vacancy);
+        return await repository.GetByIdAsync(id);
     }
 
     public async Task<long> AddAsync(VacancyCreationDTO vacancyCreationDTO)
@@ -44,12 +42,9 @@ public class VacancyService
         await repository.DeleteAsync(id);
     }
     
-    public async Task<IEnumerable<VacancyDTO>> GetRecentAsync()
+    public async Task<IEnumerable<Vacancy>> GetRecentAsync()
     {
-        var recentVacancies = await repository.GetRecentAsync();
-        var recentVacanciesDTOs = recentVacancies.Select(x => ToDTO(x));
-
-        return recentVacanciesDTOs;
+        return await repository.GetRecentAsync();
     }
 
     public async Task UpdateAsync(long id, VacancyUpdateDTO vacancyUpdateDTO)

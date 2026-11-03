@@ -22,6 +22,12 @@ public class AccountService
         this.personService = personService;
         this.companyService = companyService;
     }
+
+    public async Task<IdentityUser> GetByIdAsync(string id)
+    {
+        var account = await userManager.FindByIdAsync(id);
+        return account ?? throw new ItemNotFoundException<IdentityUser>();
+    }
     
     public async Task<AccountResponseDTO> GetByEmailAsync(string email)
     {

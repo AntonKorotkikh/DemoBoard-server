@@ -69,24 +69,4 @@ public class VacancyService
         
         await repository.UpdateAsync(updatedVacancy);
     }
-    
-    private VacancyDTO ToDTO(Vacancy vacancy)
-    {
-        var companyDTO = new CompanyResponseDTO()
-        {
-            Id = vacancy.Company.Id,
-            CompanyAccountName = vacancy.Company.Account.UserName!,
-            LogoPath = vacancy.Company.LogoPath,
-            BusinessName = vacancy.Company.BusinessName
-        };
-
-        return new()
-        {
-            Id = vacancy.Id,
-            Title = vacancy.Title,
-            Description = vacancy.Description,
-            TimeAdded = vacancy.TimeAdded,
-            Company = companyDTO
-        };
-    }
 }

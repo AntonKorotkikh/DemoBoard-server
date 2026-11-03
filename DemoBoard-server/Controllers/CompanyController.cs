@@ -47,4 +47,15 @@ public class CompanyController : ControllerBase
         
         return company;
     }
+    
+    private CompanyResponseDTO ToDTO(Company company)
+    {
+        return new()
+        {
+            Id = company.Id,
+            CompanyAccountName = company.Account.UserName!,
+            LogoPath = company.LogoPath,
+            BusinessName = company.BusinessName
+        };
+    }
 }

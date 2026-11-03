@@ -61,15 +61,4 @@ public class CompanyService
         
         await repository.UpdateAsync(updatedCompany);
     }
-    
-    private CompanyResponseDTO ToDTO(Company company)
-    {
-        return new()
-        {
-            Id = company.Id,
-            CompanyAccountName = company.Account.UserName!,
-            LogoPath = company.LogoPath,
-            BusinessName = company.BusinessName
-        };
-    }
 }

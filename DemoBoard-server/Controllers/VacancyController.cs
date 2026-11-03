@@ -171,5 +171,25 @@ namespace DemoBoard_server.Controllers
                 return StatusCode(500, "Deleting the vacancy failed unexpectedly");
             }
         }
+        
+        private VacancyDTO ToDTO(Vacancy vacancy)
+        {
+            var companyDTO = new CompanyResponseDTO()
+            {
+                Id = vacancy.Company.Id,
+                CompanyAccountName = vacancy.Company.Account.UserName!,
+                LogoPath = vacancy.Company.LogoPath,
+                BusinessName = vacancy.Company.BusinessName
+            };
+
+            return new()
+            {
+                Id = vacancy.Id,
+                Title = vacancy.Title,
+                Description = vacancy.Description,
+                TimeAdded = vacancy.TimeAdded,
+                Company = companyDTO
+            };
+        }
     }
 }

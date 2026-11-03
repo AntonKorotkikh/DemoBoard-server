@@ -133,12 +133,4 @@ public class AccountService
         if (!result.Succeeded)
             throw new InvalidNewPasswordException(result.Errors);
     }
-    
-    private AccountResponseDTO ToResponseDTO(IdentityUser account) =>
-        new()
-        {
-            Id = account.Id,
-            UserName = account.UserName!,
-            Email = account.Email!
-        };
 }

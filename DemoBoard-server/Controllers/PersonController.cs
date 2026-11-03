@@ -53,4 +53,20 @@ public class PersonController : ControllerBase
         
         return person;
     }
+    
+    private PersonDTO ToDTO(Person person)
+    {
+        var accountResponseDTO = new AccountResponseDTO()
+        {
+            Id = person.Account.Id,
+            UserName = person.Account.UserName!,
+            Email = person.Account.Email!
+        };
+        
+        return new()
+        {
+            Id = person.Id,
+            Account = accountResponseDTO
+        };
+    }
 }

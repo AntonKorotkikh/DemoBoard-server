@@ -255,5 +255,13 @@ namespace DemoBoard_server.Controllers
                 return StatusCode(500, "Deleting the account failed unexpectedly");
             }
         }
+        
+        private AccountResponseDTO ToResponseDTO(IdentityUser account) =>
+            new()
+            {
+                Id = account.Id,
+                UserName = account.UserName!,
+                Email = account.Email!
+            };
     }
 }

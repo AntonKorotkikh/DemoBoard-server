@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using DemoBoard_server.DTOs;
 using Microsoft.AspNetCore.Authorization;
 
@@ -7,7 +8,7 @@ public class UserOwnedResourceAuthorizationHandler : AuthorizationHandler<SameAc
 {
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, SameAccountRequirement requirement, IUserOwnedResource resource)
     {
-        if (context.User.Identity?.Name == resource.Owner.UserName)
+        if (context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value == resource.Owner.Id)
             context.Succeed(requirement);
 
         return Task.CompletedTask;

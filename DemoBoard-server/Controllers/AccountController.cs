@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using DemoBoard_server.Data;
 using DemoBoard_server.DTOs;
@@ -37,27 +38,19 @@ namespace DemoBoard_server.Controllers
         [HttpGet("{email}")]
         public async Task<ActionResult<AccountResponseDTO>> GetAccount(string email)
         {
-            AccountResponseDTO account;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+                return Forbid();
+            
+            IdentityUser account;
             try
             {
-                account = await service.GetByEmailAsync(email);
-            }
-            catch (ItemNotFoundException<IdentityUser>)
-            {
-                logger.LogWarning("GET api/Account/{RouteEmail}: account with this email does not exist", email);
-                return NotFound();
+                account = await service.GetByIdAsync(userId);
             }
             catch (Exception e)
             {
                 logger.LogError(e, "GET api/Account/{RouteEmail}: unexpected failure", email);
                 return StatusCode(500, "Fetching the account failed unexpectedly");
-            }
-
-            var authorizationResult = await authorizationService.AuthorizeAsync(User, account, "AccessPolicy");
-            if (!authorizationResult.Succeeded)
-            {
-                logger.LogInformation("GET api/Account/{RouteEmail}: denied access attempt by account {UserName}", email, User.Identity.Name);
-                return Forbid();
             }
             
             return account;
@@ -66,25 +59,17 @@ namespace DemoBoard_server.Controllers
         // PATCH: api/Account/5
         [Authorize(Roles = "Admin, Person, Company")]
         [HttpPatch("{id}")]
-        public async Task<IActionResult> PatchAccountData(string id, AccountUpdateDTO account)
+        public async Task<IActionResult> PatchAccountData(string id, AccountUpdateDTO accountUpdate)
         {
-            var authorizationResult = await authorizationService.AuthorizeAsync(User, account, "AccessPolicy");
-            if (!authorizationResult.Succeeded)
-            {
-                logger.LogInformation("PATCH api/Account/{RouteId}: denied access attempt by account {UserName}", id, User.Identity.Name);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
                 return Forbid();
-            }
 
             try
             {
-                await service.UpdateDataAsync(id, account);
+                await service.UpdateDataAsync(userId, accountUpdate);
                 logger.LogInformation("PATCH api/Account/{RouteId}: updated ok", id);
                 return NoContent();
-            }
-            catch (ItemNotFoundException<IdentityUser>)
-            {
-                logger.LogWarning("PATCH api/Account/{RouteId}: account with this id does not exist", id);
-                return NotFound();
             }
             catch (DbUpdateConcurrencyException e)
             {
@@ -103,16 +88,13 @@ namespace DemoBoard_server.Controllers
         [HttpPatch("password")]
         public async Task<IActionResult> PatchAccountPassword(AccountPasswordUpdateDTO passwordUpdate)
         {
-            var authorizationResult = await authorizationService.AuthorizeAsync(User, passwordUpdate, "AccessPolicy");
-            if (!authorizationResult.Succeeded)
-            {
-                logger.LogInformation("PATCH api/Account/password ({TargetAccount}): denied access attempt by account {UserName}", passwordUpdate.UserName, User.Identity.Name);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
                 return Forbid();
-            }
 
             try
             {
-                await service.UpdatePasswordAsync(passwordUpdate);
+                await service.UpdatePasswordAsync(userId, passwordUpdate);
                 logger.LogInformation("PATCH api/Account/password: updated ok (UserName: {UserName})", passwordUpdate.UserName);
                 return NoContent();
             }
@@ -231,13 +213,9 @@ namespace DemoBoard_server.Controllers
         [HttpDelete("{userName}")]
         public async Task<IActionResult> DeleteAccount(string userName)
         {
-            var userOwnedResource = new UserOwnedResource() { UserName = userName };
-            var authorizationResult = await authorizationService.AuthorizeAsync(User, userOwnedResource, "AccessPolicy");
-            if (!authorizationResult.Succeeded)
-            {
-                logger.LogInformation("DELETE api/Account/{TargetAccount}): denied access attempt by account {UserName}", userName, User.Identity.Name);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
                 return Forbid();
-            }
             
             try
             {

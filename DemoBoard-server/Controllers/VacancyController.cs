@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using DemoBoard_server.Data;
 using DemoBoard_server.DTOs;
@@ -72,18 +73,35 @@ namespace DemoBoard_server.Controllers
         // PUT: api/Vacancy/5
         [Authorize(Roles = "Admin, Company")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutVacancy(long id, VacancyUpdateDTO vacancy)
+        public async Task<IActionResult> PutVacancy(long id, VacancyUpdateDTO vacancyUpdate)
         {
+            Vacancy vacancy;
+            try
+            {
+                vacancy = await service.GetByIdAsync(id);
+            }
+            catch (ItemNotFoundException<Vacancy>)
+            {
+                logger.LogWarning("PUT api/Vacancy/{RouteId}: vacancy with this ID does not exist", id);
+                return BadRequest();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "PUT api/Vacancy/{RouteId}: unexpected failure during vacancy fetch", id);
+                return StatusCode(500, "Updating the vacancy failed unexpectedly");
+            }
+            
             var authorizationResult = await authorizationService.AuthorizeAsync(User, vacancy, "AccessPolicy");
             if (!authorizationResult.Succeeded)
             {
-                logger.LogInformation("PUT api/Vacancy/{id}): denied access attempt by account {UserName}", id, User.Identity.Name);
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                logger.LogInformation("PUT api/Vacancy/{id}): denied access attempt by account {UserId}", id, userId);
                 return Forbid();
             }
 
             try
             {
-                await service.UpdateAsync(id, vacancy);
+                await service.UpdateAsync(id, vacancyUpdate);
                 logger.LogInformation("PUT api/Vacancy/{RouteId}: updated ok", id);
                 return NoContent();
             }
@@ -132,7 +150,7 @@ namespace DemoBoard_server.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteVacancy(long id)
         {
-            VacancyDTO vacancy;
+            Vacancy vacancy;
             try
             {
                 vacancy = await service.GetByIdAsync(id);
@@ -144,14 +162,15 @@ namespace DemoBoard_server.Controllers
             }
             catch (Exception e)
             {
-                logger.LogError(e, "DELETE api/Vacancy/{RouteId}: unexpected failure", id);
+                logger.LogError(e, "DELETE api/Vacancy/{RouteId}: unexpected failure during vacancy fetch", id);
                 return StatusCode(500, "Deleting the vacancy failed unexpectedly");
             }
             
             var authorizationResult = await authorizationService.AuthorizeAsync(User, vacancy, "AccessPolicy");
             if (!authorizationResult.Succeeded)
             {
-                logger.LogInformation("DELETE api/Vacancy/{id}): denied access attempt by account {UserName}", id, User.Identity.Name);
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                logger.LogInformation("DELETE api/Vacancy/{id}): denied access attempt by account {UserId}", id, userId);
                 return Forbid();
             }
             

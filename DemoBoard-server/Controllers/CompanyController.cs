@@ -29,7 +29,7 @@ public class CompanyController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<CompanyResponseDTO>> GetCompany(long id)
     {
-        CompanyResponseDTO company;
+        Company company;
         try
         {
             company = await service.GetByIdAsync(id);
@@ -45,6 +45,16 @@ public class CompanyController : ControllerBase
             return StatusCode(500, "Fetching the company failed unexpectedly");
         }
         
-        return company;
+        return ToDTO(company);
+    }
+    
+    private CompanyResponseDTO ToDTO(Company company)
+    {
+        return new()
+        {
+            Id = company.Id,
+            LogoPath = company.LogoPath,
+            BusinessName = company.BusinessName
+        };
     }
 }

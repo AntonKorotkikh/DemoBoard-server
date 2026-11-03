@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using DemoBoard_server.DTOs;
 using DemoBoard_server.Exceptions;
 using DemoBoard_server.Models;
@@ -28,7 +29,7 @@ public class PersonController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<PersonDTO>> GetPerson(long id)
     {
-        PersonDTO person;
+        Person person;
         try
         {
             person = await service.GetByIdAsync(id);
@@ -47,10 +48,27 @@ public class PersonController : ControllerBase
         var authorizationResult = await authorizationService.AuthorizeAsync(User, person, "AccessPolicy");
         if (!authorizationResult.Succeeded)
         {
-            logger.LogInformation("GET api/Person/{id}): denied access attempt by account {UserName}", id, User.Identity.Name);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            logger.LogInformation("GET api/Person/{id}): denied access attempt by account {UserId}", id, userId);
             return Forbid();
         }
         
-        return person;
+        return ToDTO(person);
+    }
+    
+    private PersonDTO ToDTO(Person person)
+    {
+        var accountResponseDTO = new AccountResponseDTO()
+        {
+            Id = person.Owner.Id,
+            UserName = person.Owner.UserName!,
+            Email = person.Owner.Email!
+        };
+        
+        return new()
+        {
+            Id = person.Id,
+            Account = accountResponseDTO
+        };
     }
 }

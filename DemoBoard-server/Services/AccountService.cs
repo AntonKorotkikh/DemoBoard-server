@@ -9,27 +9,23 @@ namespace DemoBoard_server.Services;
 
 public class AccountService
 {
-    private readonly IAuthorizationService authorizationService;
     private readonly UserManager<IdentityUser> userManager;
     private readonly SignInManager<IdentityUser> signInManager;
     private readonly PersonService personService;
     private readonly CompanyService companyService;
 
-    public AccountService(IAuthorizationService authorizationService, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, PersonService personService, CompanyService companyService)
+    public AccountService(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, PersonService personService, CompanyService companyService)
     {
         this.userManager = userManager;
         this.signInManager = signInManager;
         this.personService = personService;
         this.companyService = companyService;
     }
-    
-    public async Task<AccountResponseDTO> GetByEmailAsync(string email)
+
+    public async Task<IdentityUser> GetByIdAsync(string id)
     {
-        var account = await userManager.FindByEmailAsync(email);
-        if (account == null)
-            throw new ItemNotFoundException<IdentityUser>();
-        
-        return ToResponseDTO(account);
+        var account = await userManager.FindByIdAsync(id);
+        return account ?? throw new ItemNotFoundException<IdentityUser>();
     }
 
     public async Task<string> AddPersonAccountAsync(PersonAccountCreationDTO account)
@@ -101,18 +97,18 @@ public class AccountService
         await userManager.DeleteAsync(user);
     }
 
-    public async Task UpdateDataAsync(string id, AccountUpdateDTO accountUpdate)
+    public async Task UpdateDataAsync(string userId, AccountUpdateDTO accountUpdate)
     {
-        var existingAccount = await userManager.FindByIdAsync(id);
-        if (existingAccount == null)
+        var account = await userManager.FindByIdAsync(userId);
+        if (account == null)
             throw new ItemNotFoundException<IdentityUser>();
 
-        var updatedName = accountUpdate.UserName ?? existingAccount.UserName;
-        var updatedEmail = accountUpdate.Email ?? existingAccount.Email;
+        var updatedName = accountUpdate.UserName ?? account.UserName;
+        var updatedEmail = accountUpdate.Email ?? account.Email;
         
         var updatedAccount = new IdentityUser()
         {
-            Id = id,
+            Id = userId,
             UserName = updatedName,
             Email = updatedEmail
         };
@@ -120,25 +116,17 @@ public class AccountService
         await userManager.UpdateAsync(updatedAccount);
     }
 
-    public async Task UpdatePasswordAsync(AccountPasswordUpdateDTO passwordUpdate)
+    public async Task UpdatePasswordAsync(string userId, AccountPasswordUpdateDTO passwordUpdate)
     {
-        var existingAccount = await userManager.FindByNameAsync(passwordUpdate.UserName);
-        if (existingAccount == null)
+        var account = await userManager.FindByIdAsync(userId);
+        if (account == null)
             throw new ItemNotFoundException<IdentityUser>();
 
-        if (! await userManager.CheckPasswordAsync(existingAccount, passwordUpdate.CurrentPassword))
+        if (! await userManager.CheckPasswordAsync(account, passwordUpdate.CurrentPassword))
             throw new IncorrectCurrentPasswordException();
 
-        var result = await userManager.ChangePasswordAsync(existingAccount, passwordUpdate.CurrentPassword, passwordUpdate.NewPassword);
+        var result = await userManager.ChangePasswordAsync(account, passwordUpdate.CurrentPassword, passwordUpdate.NewPassword);
         if (!result.Succeeded)
             throw new InvalidNewPasswordException(result.Errors);
     }
-    
-    private AccountResponseDTO ToResponseDTO(IdentityUser account) =>
-        new()
-        {
-            Id = account.Id,
-            UserName = account.UserName!,
-            Email = account.Email!
-        };
 }

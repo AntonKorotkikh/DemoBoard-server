@@ -1,6 +1,8 @@
 using DemoBoard_server.DTOs;
+using DemoBoard_server.Exceptions;
 using DemoBoard_server.Models;
 using DemoBoard_server.Repositories;
+using Microsoft.AspNetCore.Identity;
 
 namespace DemoBoard_server.Services;
 
@@ -8,30 +10,35 @@ public class VacancyService
 {
     private readonly VacancyRepository repository;
     private readonly CompanyRepository companyRepository;
+    private readonly UserManager<IdentityUser> userManager;
 
-    public VacancyService(VacancyRepository repository, CompanyRepository companyRepository)
+    public VacancyService(VacancyRepository repository, CompanyRepository companyRepository, UserManager<IdentityUser> userManager)
     {
         this.repository = repository;
         this.companyRepository = companyRepository;
+        this.userManager = userManager;
     }
 
-    public async Task<VacancyDTO> GetByIdAsync(long id)
+    public async Task<Vacancy> GetByIdAsync(long id)
     {
-        var vacancy = await repository.GetByIdAsync(id);
+        return await repository.GetByIdAsync(id);
+    }
+
+    public async Task<long> AddAsync(string userId, VacancyCreationDTO vacancyCreation)
+    {
+        var account = await userManager.FindByIdAsync(userId);
+        if (account == null)
+            throw new ItemNotFoundException<IdentityUser>();
         
-        return ToDTO(vacancy);
-    }
+        var company = await companyRepository.GetByAccountNameAsync(account.UserName!);
 
-    public async Task<long> AddAsync(VacancyCreationDTO vacancyCreationDTO)
-    {
-        var company = await companyRepository.GetByAccountNameAsync(vacancyCreationDTO.CompanyAccountName);
-
-        var vacancyToAdd = new Vacancy()
+        var vacancyToAdd = new Vacancy
         {
-            Title = vacancyCreationDTO.Title,
-            Description = vacancyCreationDTO.Description,
+            Title = vacancyCreation.Title,
+            Description = vacancyCreation.Description,
             TimeAdded = DateTime.Now,
-            Company = company
+            Company = company,
+            Owner = account
         };
 
         var addedVacancyId = await repository.AddAsync(vacancyToAdd);
@@ -44,49 +51,25 @@ public class VacancyService
         await repository.DeleteAsync(id);
     }
     
-    public async Task<IEnumerable<VacancyDTO>> GetRecentAsync()
+    public async Task<IEnumerable<Vacancy>> GetRecentAsync()
     {
-        var recentVacancies = await repository.GetRecentAsync();
-        var recentVacanciesDTOs = recentVacancies.Select(x => ToDTO(x));
-
-        return recentVacanciesDTOs;
+        return await repository.GetRecentAsync();
     }
 
-    public async Task UpdateAsync(long id, VacancyUpdateDTO vacancyUpdateDTO)
+    public async Task UpdateAsync(long id, VacancyUpdateDTO vacancyUpdate)
     {
-        var company = await companyRepository.GetByAccountNameAsync(vacancyUpdateDTO.CompanyAccountName);
-        
-        var vacancyInDB = await repository.GetByIdAsync(id);
+        var vacancy = await repository.GetByIdAsync(id);
         
         var updatedVacancy = new Vacancy()
         {
             Id = id,
-            Title = vacancyUpdateDTO.Title ?? vacancyInDB.Title,
-            Description = vacancyUpdateDTO.Description ?? vacancyInDB.Description,
-            TimeAdded = vacancyInDB.TimeAdded,
-            Company = company
+            Title = vacancyUpdate.Title ?? vacancy.Title,
+            Description = vacancyUpdate.Description ?? vacancy.Description,
+            TimeAdded = vacancy.TimeAdded,
+            Company = vacancy.Company,
+            Owner = vacancy.Owner
         };
         
         await repository.UpdateAsync(updatedVacancy);
-    }
-    
-    private VacancyDTO ToDTO(Vacancy vacancy)
-    {
-        var companyDTO = new CompanyResponseDTO()
-        {
-            Id = vacancy.Company.Id,
-            CompanyAccountName = vacancy.Company.Account.UserName!,
-            LogoPath = vacancy.Company.LogoPath,
-            BusinessName = vacancy.Company.BusinessName
-        };
-
-        return new()
-        {
-            Id = vacancy.Id,
-            Title = vacancy.Title,
-            Description = vacancy.Description,
-            TimeAdded = vacancy.TimeAdded,
-            Company = companyDTO
-        };
     }
 }

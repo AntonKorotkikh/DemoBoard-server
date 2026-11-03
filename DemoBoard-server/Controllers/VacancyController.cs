@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using DemoBoard_server.Data;
 using DemoBoard_server.DTOs;
@@ -38,7 +39,8 @@ namespace DemoBoard_server.Controllers
             try
             {
                 var recentVacancies = await service.GetRecentAsync();
-                return Ok(recentVacancies);
+                var recentVacanciesDTOs = recentVacancies.Select(x => ToDTO(x));
+                return Ok(recentVacanciesDTOs);
             }
             catch (Exception e)
             {
@@ -55,12 +57,12 @@ namespace DemoBoard_server.Controllers
             try
             {
                 var vacancy = await service.GetByIdAsync(id);
-                return vacancy;
+                return ToDTO(vacancy);
             }
             catch (ItemNotFoundException<Vacancy>)
             {
                 logger.LogWarning("GET api/Vacancy/{RouteId}: vacancy with this ID does not exist", id);
-                return NotFound();                
+                return NotFound();
             }
             catch (Exception e)
             {
@@ -72,18 +74,35 @@ namespace DemoBoard_server.Controllers
         // PUT: api/Vacancy/5
         [Authorize(Roles = "Admin, Company")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutVacancy(long id, VacancyUpdateDTO vacancy)
+        public async Task<IActionResult> PutVacancy(long id, VacancyUpdateDTO vacancyUpdate)
         {
+            Vacancy vacancy;
+            try
+            {
+                vacancy = await service.GetByIdAsync(id);
+            }
+            catch (ItemNotFoundException<Vacancy>)
+            {
+                logger.LogWarning("PUT api/Vacancy/{RouteId}: vacancy with this ID does not exist", id);
+                return BadRequest();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "PUT api/Vacancy/{RouteId}: unexpected failure during vacancy fetch", id);
+                return StatusCode(500, "Updating the vacancy failed unexpectedly");
+            }
+            
             var authorizationResult = await authorizationService.AuthorizeAsync(User, vacancy, "AccessPolicy");
             if (!authorizationResult.Succeeded)
             {
-                logger.LogInformation("PUT api/Vacancy/{id}): denied access attempt by account {UserName}", id, User.Identity.Name);
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                logger.LogInformation("PUT api/Vacancy/{id}): denied access attempt by account {UserId}", id, userId);
                 return Forbid();
             }
 
             try
             {
-                await service.UpdateAsync(id, vacancy);
+                await service.UpdateAsync(id, vacancyUpdate);
                 logger.LogInformation("PUT api/Vacancy/{RouteId}: updated ok", id);
                 return NoContent();
             }
@@ -109,23 +128,12 @@ namespace DemoBoard_server.Controllers
         [HttpPost]
         public async Task<ActionResult<VacancyDTO>> PostVacancy(VacancyCreationDTO vacancy)
         {
-            var authorizationResult = await authorizationService.AuthorizeAsync(User, vacancy, "AccessPolicy");
-            if (!authorizationResult.Succeeded)
-            {
-                logger.LogInformation("POST api/Vacancy: denied access attempt by account {UserName}", User.Identity.Name);
-                return Forbid();
-            }
-
             try
             {
-                var addedVacancyId = await service.AddAsync(vacancy);
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var addedVacancyId = await service.AddAsync(userId, vacancy);
                 logger.LogInformation("POST api/Vacancy: added new vacancy ok (ID: {id})", addedVacancyId);
                 return CreatedAtAction(nameof(GetVacancy), new { id = addedVacancyId }, vacancy);
-            }
-            catch (ItemNotFoundException<Company>)
-            {
-                logger.LogWarning("POST api/Vacancy: company with the specified account name ({CompanyAccountName}) does not exist", vacancy.CompanyAccountName);
-                return BadRequest();
             }
             catch (Exception e)
             {
@@ -139,7 +147,7 @@ namespace DemoBoard_server.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteVacancy(long id)
         {
-            VacancyDTO vacancy;
+            Vacancy vacancy;
             try
             {
                 vacancy = await service.GetByIdAsync(id);
@@ -151,14 +159,15 @@ namespace DemoBoard_server.Controllers
             }
             catch (Exception e)
             {
-                logger.LogError(e, "DELETE api/Vacancy/{RouteId}: unexpected failure", id);
+                logger.LogError(e, "DELETE api/Vacancy/{RouteId}: unexpected failure during vacancy fetch", id);
                 return StatusCode(500, "Deleting the vacancy failed unexpectedly");
             }
             
             var authorizationResult = await authorizationService.AuthorizeAsync(User, vacancy, "AccessPolicy");
             if (!authorizationResult.Succeeded)
             {
-                logger.LogInformation("DELETE api/Vacancy/{id}): denied access attempt by account {UserName}", id, User.Identity.Name);
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                logger.LogInformation("DELETE api/Vacancy/{id}): denied access attempt by account {UserId}", id, userId);
                 return Forbid();
             }
             
@@ -177,6 +186,25 @@ namespace DemoBoard_server.Controllers
                 logger.LogError(e, "DELETE api/Vacancy/{RouteId}: unexpected failure", id);
                 return StatusCode(500, "Deleting the vacancy failed unexpectedly");
             }
+        }
+        
+        private VacancyDTO ToDTO(Vacancy vacancy)
+        {
+            var companyDTO = new CompanyResponseDTO()
+            {
+                Id = vacancy.Company.Id,
+                LogoPath = vacancy.Company.LogoPath,
+                BusinessName = vacancy.Company.BusinessName
+            };
+
+            return new()
+            {
+                Id = vacancy.Id,
+                Title = vacancy.Title,
+                Description = vacancy.Description,
+                TimeAdded = vacancy.TimeAdded,
+                Company = companyDTO
+            };
         }
     }
 }

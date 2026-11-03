@@ -48,12 +48,7 @@ public static class WebApplicationBuilderExtensions
             .AddPolicy("AccessPolicy", policy =>
                 policy.Requirements.Add(new SameAccountRequirement()));
 
-        builder.Services.AddSingleton<IAuthorizationHandler, AccountAuthorizationHandler>();
-        builder.Services.AddSingleton<IAuthorizationHandler, CompanyUpdateAuthorizationHandler>();
-        builder.Services.AddSingleton<IAuthorizationHandler, PersonAuthorizationHandler>();
-        builder.Services.AddSingleton<IAuthorizationHandler, VacancyAuthorizationHandler>();
-        builder.Services.AddSingleton<IAuthorizationHandler, VacancyCreationAuthorizationHandler>();
-        builder.Services.AddSingleton<IAuthorizationHandler, VacancyUpdateAuthorizationHandler>();
+        builder.Services.AddSingleton<IAuthorizationHandler, UserOwnedResourceAuthorizationHandler>();
         
         builder.Services.Configure<IdentityOptions>(options =>
         {

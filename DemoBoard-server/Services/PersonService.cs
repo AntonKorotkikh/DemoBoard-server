@@ -19,7 +19,7 @@ public class PersonService
     {
         var personToAdd = new Person()
         {
-            Account = account
+            Owner = account
         };
 
         var addedPersonId = await repository.AddAsync(personToAdd);
@@ -27,33 +27,17 @@ public class PersonService
         return addedPersonId;
     }
 
-    public async Task<PersonDTO> GetByIdAsync(long id)
+    public async Task<Person> GetByIdAsync(long id)
     {
         var person = await repository.GetByIdAsync(id);
         if (person == null)
             throw new ItemNotFoundException<Person>();
 
-        return ToDTO(person);
+        return person;
     }
 
     public async Task DeleteAsync(long id)
     {
         await repository.DeleteAsync(id);
-    }
-    
-    private PersonDTO ToDTO(Person person)
-    {
-        var accountResponseDTO = new AccountResponseDTO()
-        {
-            Id = person.Account.Id,
-            UserName = person.Account.UserName!,
-            Email = person.Account.Email!
-        };
-        
-        return new()
-        {
-            Id = person.Id,
-            Account = accountResponseDTO
-        };
     }
 }

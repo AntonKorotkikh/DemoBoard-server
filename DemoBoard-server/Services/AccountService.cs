@@ -28,15 +28,6 @@ public class AccountService
         var account = await userManager.FindByIdAsync(id);
         return account ?? throw new ItemNotFoundException<IdentityUser>();
     }
-    
-    public async Task<AccountResponseDTO> GetByEmailAsync(string email)
-    {
-        var account = await userManager.FindByEmailAsync(email);
-        if (account == null)
-            throw new ItemNotFoundException<IdentityUser>();
-        
-        return ToResponseDTO(account);
-    }
 
     public async Task<string> AddPersonAccountAsync(PersonAccountCreationDTO account)
     {

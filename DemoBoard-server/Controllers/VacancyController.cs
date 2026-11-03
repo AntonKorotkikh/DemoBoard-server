@@ -39,7 +39,8 @@ namespace DemoBoard_server.Controllers
             try
             {
                 var recentVacancies = await service.GetRecentAsync();
-                return Ok(recentVacancies);
+                var recentVacanciesDTOs = recentVacancies.Select(x => ToDTO(x));
+                return Ok(recentVacanciesDTOs);
             }
             catch (Exception e)
             {
@@ -56,12 +57,12 @@ namespace DemoBoard_server.Controllers
             try
             {
                 var vacancy = await service.GetByIdAsync(id);
-                return vacancy;
+                return ToDTO(vacancy);
             }
             catch (ItemNotFoundException<Vacancy>)
             {
                 logger.LogWarning("GET api/Vacancy/{RouteId}: vacancy with this ID does not exist", id);
-                return NotFound();                
+                return NotFound();
             }
             catch (Exception e)
             {
@@ -129,14 +130,10 @@ namespace DemoBoard_server.Controllers
         {
             try
             {
-                var addedVacancyId = await service.AddAsync(vacancy);
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var addedVacancyId = await service.AddAsync(userId, vacancy);
                 logger.LogInformation("POST api/Vacancy: added new vacancy ok (ID: {id})", addedVacancyId);
                 return CreatedAtAction(nameof(GetVacancy), new { id = addedVacancyId }, vacancy);
-            }
-            catch (ItemNotFoundException<Company>)
-            {
-                logger.LogWarning("POST api/Vacancy: company with the specified account name ({CompanyAccountName}) does not exist", vacancy.CompanyAccountName);
-                return BadRequest();
             }
             catch (Exception e)
             {
@@ -196,7 +193,6 @@ namespace DemoBoard_server.Controllers
             var companyDTO = new CompanyResponseDTO()
             {
                 Id = vacancy.Company.Id,
-                CompanyAccountName = vacancy.Company.Account.UserName!,
                 LogoPath = vacancy.Company.LogoPath,
                 BusinessName = vacancy.Company.BusinessName
             };

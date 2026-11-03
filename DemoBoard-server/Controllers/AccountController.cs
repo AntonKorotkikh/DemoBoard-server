@@ -24,13 +24,11 @@ namespace DemoBoard_server.Controllers
     {
         private readonly AccountService service;
         private readonly ILogger<AccountController> logger;
-        private readonly IAuthorizationService authorizationService;
 
-        public AccountController(AccountService service, ILogger<AccountController> logger, IAuthorizationService authorizationService)
+        public AccountController(AccountService service, ILogger<AccountController> logger)
         {
             this.service = service;
             this.logger = logger;
-            this.authorizationService = authorizationService;
         }
 
         // GET: api/Account/email@example.org
@@ -53,7 +51,7 @@ namespace DemoBoard_server.Controllers
                 return StatusCode(500, "Fetching the account failed unexpectedly");
             }
             
-            return account;
+            return ToResponseDTO(account);
         }
 
         // PATCH: api/Account/5
@@ -95,13 +93,8 @@ namespace DemoBoard_server.Controllers
             try
             {
                 await service.UpdatePasswordAsync(userId, passwordUpdate);
-                logger.LogInformation("PATCH api/Account/password: updated ok (UserName: {UserName})", passwordUpdate.UserName);
+                logger.LogInformation("PATCH api/Account/password: updated ok (UserId: {UserId})", userId);
                 return NoContent();
-            }
-            catch (ItemNotFoundException<IdentityUser>)
-            {
-                logger.LogWarning("PATCH api/Account/password: account with this UserName does not exist (UserName: {UserName})", passwordUpdate.UserName);
-                return NotFound();
             }
             catch (IncorrectCurrentPasswordException)
             {
@@ -110,17 +103,17 @@ namespace DemoBoard_server.Controllers
             catch (InvalidNewPasswordException e)
             {
                 var errors = e.Errors.Select(error => $"{error.Code}: {error.Description}").ToList();
-                logger.LogInformation("PATCH api/Account/password: ChangePasswordAsync failed for user {UserName}. This is likely because the new password does not meet the requirements, but logging errors anyway in case this is something else: {errors}", passwordUpdate.UserName, errors);
+                logger.LogInformation("PATCH api/Account/password: ChangePasswordAsync failed for user {UserId}. This is likely because the new password does not meet the requirements, but logging errors anyway in case this is something else: {errors}", userId, errors);
                 return Ok("The new password does not meet the requirements");
             }
             catch (DbUpdateConcurrencyException e)
             {
-                logger.LogWarning(e, "PATCH api/Account/password: concurrency conflict (UserName: {UserName})", passwordUpdate.UserName);
+                logger.LogWarning(e, "PATCH api/Account/password: concurrency conflict (UserId: {UserId})", userId);
                 return Conflict();      // error message here?
             }
             catch (Exception e) 
             {
-                logger.LogError(e, "PATCH api/Account/password: unexpected failure (UserName: {UserName})", passwordUpdate.UserName);
+                logger.LogError(e, "PATCH api/Account/password: unexpected failure (UserId: {UserId})", userId);
                 return StatusCode(500, "Updating the account password failed unexpectedly");
             }
         }

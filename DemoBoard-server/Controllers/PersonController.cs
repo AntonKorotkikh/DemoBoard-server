@@ -53,16 +53,16 @@ public class PersonController : ControllerBase
             return Forbid();
         }
         
-        return person;
+        return ToDTO(person);
     }
     
     private PersonDTO ToDTO(Person person)
     {
         var accountResponseDTO = new AccountResponseDTO()
         {
-            Id = person.Account.Id,
-            UserName = person.Account.UserName!,
-            Email = person.Account.Email!
+            Id = person.Owner.Id,
+            UserName = person.Owner.UserName!,
+            Email = person.Owner.Email!
         };
         
         return new()

@@ -1,6 +1,8 @@
 using DemoBoard_server.DTOs;
+using DemoBoard_server.Exceptions;
 using DemoBoard_server.Models;
 using DemoBoard_server.Repositories;
+using Microsoft.AspNetCore.Identity;
 
 namespace DemoBoard_server.Services;
 
@@ -8,11 +10,13 @@ public class VacancyService
 {
     private readonly VacancyRepository repository;
     private readonly CompanyRepository companyRepository;
+    private readonly UserManager<IdentityUser> userManager;
 
-    public VacancyService(VacancyRepository repository, CompanyRepository companyRepository)
+    public VacancyService(VacancyRepository repository, CompanyRepository companyRepository, UserManager<IdentityUser> userManager)
     {
         this.repository = repository;
         this.companyRepository = companyRepository;
+        this.userManager = userManager;
     }
 
     public async Task<Vacancy> GetByIdAsync(long id)
@@ -20,16 +24,21 @@ public class VacancyService
         return await repository.GetByIdAsync(id);
     }
 
-    public async Task<long> AddAsync(VacancyCreationDTO vacancyCreationDTO)
+    public async Task<long> AddAsync(string userId, VacancyCreationDTO vacancyCreation)
     {
-        var company = await companyRepository.GetByAccountNameAsync(vacancyCreationDTO.CompanyAccountName);
+        var account = await userManager.FindByIdAsync(userId);
+        if (account == null)
+            throw new ItemNotFoundException<IdentityUser>();
+        
+        var company = await companyRepository.GetByAccountNameAsync(account.UserName!);
 
-        var vacancyToAdd = new Vacancy()
+        var vacancyToAdd = new Vacancy
         {
-            Title = vacancyCreationDTO.Title,
-            Description = vacancyCreationDTO.Description,
+            Title = vacancyCreation.Title,
+            Description = vacancyCreation.Description,
             TimeAdded = DateTime.Now,
-            Company = company
+            Company = company,
+            Owner = account
         };
 
         var addedVacancyId = await repository.AddAsync(vacancyToAdd);
@@ -47,19 +56,18 @@ public class VacancyService
         return await repository.GetRecentAsync();
     }
 
-    public async Task UpdateAsync(long id, VacancyUpdateDTO vacancyUpdateDTO)
+    public async Task UpdateAsync(long id, VacancyUpdateDTO vacancyUpdate)
     {
-        var company = await companyRepository.GetByAccountNameAsync(vacancyUpdateDTO.CompanyAccountName);
-        
-        var vacancyInDB = await repository.GetByIdAsync(id);
+        var vacancy = await repository.GetByIdAsync(id);
         
         var updatedVacancy = new Vacancy()
         {
             Id = id,
-            Title = vacancyUpdateDTO.Title ?? vacancyInDB.Title,
-            Description = vacancyUpdateDTO.Description ?? vacancyInDB.Description,
-            TimeAdded = vacancyInDB.TimeAdded,
-            Company = company
+            Title = vacancyUpdate.Title ?? vacancy.Title,
+            Description = vacancyUpdate.Description ?? vacancy.Description,
+            TimeAdded = vacancy.TimeAdded,
+            Company = vacancy.Company,
+            Owner = vacancy.Owner
         };
         
         await repository.UpdateAsync(updatedVacancy);

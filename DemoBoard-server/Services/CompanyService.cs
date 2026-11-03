@@ -22,13 +22,14 @@ public class CompanyService
         return await repository.GetByIdAsync(id);
     }
 
-    public async Task<long> AddAsync(IdentityUser account, CompanyAccountCreationDTO company)
+    public async Task<long> AddAsync(IdentityUser account, CompanyAccountCreationDTO companyAccountCreation)
     {
         var companyToAdd = new Company()
         {
             Account = account,
             LogoPath = "",          // not implemented
-            BusinessName = company.BusinessName
+            BusinessName = companyAccountCreation.BusinessName,
+            Owner = account
         };
 
         var addedCompanyId = await repository.AddAsync(companyToAdd);
@@ -41,20 +42,21 @@ public class CompanyService
         await repository.DeleteAsync(id);
     }
 
-    public async Task UpdateDataAsync(CompanyUpdateDTO companyUpdateDTO)
+    public async Task UpdateDataAsync(string userId, CompanyUpdateDTO companyUpdate)
     {
-        var existingCompany = await repository.GetByAccountNameAsync(companyUpdateDTO.CompanyAccountName);
-
-        var account = await userManager.FindByIdAsync(existingCompany.Account.Id);
+        var account = await userManager.FindByIdAsync(userId);
         if (account == null)
             throw new ItemNotFoundException<IdentityUser>();
         
+        var company = await repository.GetByAccountNameAsync(account.UserName!);
+        
         var updatedCompany = new Company()
         {
-            Id = existingCompany.Id,
+            Id = company.Id,
             Account = account,
-            LogoPath = companyUpdateDTO.LogoPath ?? existingCompany.LogoPath,
-            BusinessName = companyUpdateDTO.BusinessName ?? existingCompany.BusinessName
+            LogoPath = companyUpdate.LogoPath ?? company.LogoPath,
+            BusinessName = companyUpdate.BusinessName ?? company.BusinessName,
+            Owner = company.Owner
         };
         
         await repository.UpdateAsync(updatedCompany);

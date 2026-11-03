@@ -19,7 +19,7 @@ public class PersonService
     {
         var personToAdd = new Person()
         {
-            Account = account
+            Owner = account
         };
 
         var addedPersonId = await repository.AddAsync(personToAdd);

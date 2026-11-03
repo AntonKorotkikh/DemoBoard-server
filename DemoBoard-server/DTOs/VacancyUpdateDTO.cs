@@ -6,5 +6,4 @@ public class VacancyUpdateDTO
 {
     public string? Title { get; set; }
     public string? Description { get; set; }
-    public required string CompanyAccountName { get; set; }
 }

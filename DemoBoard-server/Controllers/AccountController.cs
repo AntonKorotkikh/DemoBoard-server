@@ -215,11 +215,6 @@ namespace DemoBoard_server.Controllers
                 await service.DeleteAsync(userId);
                 return NoContent();
             }
-            catch (ItemNotFoundException<IdentityUser>)
-            {
-                logger.LogError("DELETE api/Account: account {UserId} does not exist", userId);
-                return BadRequest();
-            }
             catch (Exception e)
             {
                 logger.LogError(e, "DELETE api/Account: unexpected failure during account {UserId} deletion", userId);

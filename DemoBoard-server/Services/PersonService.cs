@@ -29,11 +29,7 @@ public class PersonService
 
     public async Task<Person> GetByIdAsync(long id)
     {
-        var person = await repository.GetByIdAsync(id);
-        if (person == null)
-            throw new ItemNotFoundException<Person>();
-
-        return person;
+        return await repository.GetByIdAsync(id);
     }
 
     public async Task DeleteAsync(long id)

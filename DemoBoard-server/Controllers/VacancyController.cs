@@ -92,7 +92,7 @@ namespace DemoBoard_server.Controllers
                 return StatusCode(500, "Updating the vacancy failed unexpectedly");
             }
             
-            var authorizationResult = await authorizationService.AuthorizeAsync(User, vacancy, "AccessPolicy");
+            var authorizationResult = await authorizationService.AuthorizeAsync(User, vacancy, "SameAccountPolicy");
             if (!authorizationResult.Succeeded)
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -163,7 +163,7 @@ namespace DemoBoard_server.Controllers
                 return StatusCode(500, "Deleting the vacancy failed unexpectedly");
             }
             
-            var authorizationResult = await authorizationService.AuthorizeAsync(User, vacancy, "AccessPolicy");
+            var authorizationResult = await authorizationService.AuthorizeAsync(User, vacancy, "SameAccountPolicy");
             if (!authorizationResult.Succeeded)
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

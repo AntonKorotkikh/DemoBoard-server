@@ -45,7 +45,7 @@ public class PersonController : ControllerBase
             return StatusCode(500, "Fetching the person failed unexpectedly");
         }
         
-        var authorizationResult = await authorizationService.AuthorizeAsync(User, person, "AccessPolicy");
+        var authorizationResult = await authorizationService.AuthorizeAsync(User, person, "SameAccountPolicy");
         if (!authorizationResult.Succeeded)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

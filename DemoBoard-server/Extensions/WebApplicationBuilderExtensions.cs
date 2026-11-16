@@ -45,7 +45,7 @@ public static class WebApplicationBuilderExtensions
         });
 
         builder.Services.AddAuthorizationBuilder()
-            .AddPolicy("AccessPolicy", policy =>
+            .AddPolicy("SameAccountPolicy", policy =>
                 policy.Requirements.Add(new SameAccountRequirement()));
 
         builder.Services.AddSingleton<IAuthorizationHandler, UserOwnedResourceAuthorizationHandler>();

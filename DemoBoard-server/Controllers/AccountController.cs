@@ -31,10 +31,10 @@ namespace DemoBoard_server.Controllers
             this.logger = logger;
         }
 
-        // GET: api/Account/email@example.org
+        // GET: api/Account
         [Authorize(Roles = "Admin, Person, Company")]
-        [HttpGet("{email}")]
-        public async Task<ActionResult<AccountResponseDTO>> GetAccount(string email)
+        [HttpGet]
+        public async Task<ActionResult<AccountResponseDTO>> GetAccount()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userId == null)
@@ -47,17 +47,17 @@ namespace DemoBoard_server.Controllers
             }
             catch (Exception e)
             {
-                logger.LogError(e, "GET api/Account/{RouteEmail}: unexpected failure", email);
+                logger.LogError(e, "GET api/Account: unexpected failure during account {UserId} fetch", userId);
                 return StatusCode(500, "Fetching the account failed unexpectedly");
             }
             
             return ToResponseDTO(account);
         }
 
-        // PATCH: api/Account/5
+        // PATCH: api/Account
         [Authorize(Roles = "Admin, Person, Company")]
-        [HttpPatch("{id}")]
-        public async Task<IActionResult> PatchAccountData(string id, AccountUpdateDTO accountUpdate)
+        [HttpPatch]
+        public async Task<IActionResult> PatchAccountData(AccountUpdateDTO accountUpdate)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userId == null)
@@ -66,17 +66,17 @@ namespace DemoBoard_server.Controllers
             try
             {
                 await service.UpdateDataAsync(userId, accountUpdate);
-                logger.LogInformation("PATCH api/Account/{RouteId}: updated ok", id);
+                logger.LogInformation("PATCH api/Account: account {UserId} updated ok", userId);
                 return NoContent();
             }
             catch (DbUpdateConcurrencyException e)
             {
-                logger.LogWarning(e, "PATCH api/Account/{RouteId}: concurrency conflict", id);
+                logger.LogWarning(e, "PATCH api/Account: concurrency conflict during account {UserId} update", userId);
                 return Conflict();      // error message here?
             }
             catch (Exception e) 
             {
-                logger.LogError(e, "PATCH api/Account/{RouteId}: unexpected failure", id);
+                logger.LogError(e, "PATCH api/Account: unexpected failure during account {UserId} update", userId);
                 return StatusCode(500, "Updating account data failed unexpectedly");
             }
         }
@@ -201,10 +201,10 @@ namespace DemoBoard_server.Controllers
             }
         }
 
-        // DELETE: api/Account/userName
+        // DELETE: api/Account
         [Authorize(Roles = "Admin, Person, Company")]
-        [HttpDelete("{userName}")]
-        public async Task<IActionResult> DeleteAccount(string userName)
+        [HttpDelete]
+        public async Task<IActionResult> DeleteAccount()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userId == null)
@@ -212,17 +212,17 @@ namespace DemoBoard_server.Controllers
             
             try
             {
-                await service.DeleteAsync(userName);
+                await service.DeleteAsync(userId);
                 return NoContent();
             }
             catch (ItemNotFoundException<IdentityUser>)
             {
-                logger.LogWarning("DELETE api/Account/{userName}: account with this username does not exist", userName);
+                logger.LogError("DELETE api/Account: account {UserId} does not exist", userId);
                 return BadRequest();
             }
             catch (Exception e)
             {
-                logger.LogError(e, "DELETE api/Account/{userName}: unexpected failure", userName);
+                logger.LogError(e, "DELETE api/Account: unexpected failure during account {UserId} deletion", userId);
                 return StatusCode(500, "Deleting the account failed unexpectedly");
             }
         }

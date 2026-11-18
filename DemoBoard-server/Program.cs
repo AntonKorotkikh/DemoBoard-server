@@ -42,6 +42,7 @@ public class Program
         builder.AddDatabaseService();
         builder.AddSecurity();
         builder.AddWebServices();
+        builder.Services.AddSerilog();
 
         var app = builder.Build();
 

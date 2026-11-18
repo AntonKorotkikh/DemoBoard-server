@@ -71,10 +71,10 @@ namespace DemoBoard_server.Controllers
             }
         }
 
-        // PUT: api/Vacancy/5
+        // PATCH: api/Vacancy/5
         [Authorize(Roles = "Admin, Company")]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutVacancy(long id, VacancyUpdateDTO vacancyUpdate)
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PatchVacancy(long id, VacancyUpdateDTO vacancyUpdate)
         {
             Vacancy vacancy;
             try
@@ -83,12 +83,12 @@ namespace DemoBoard_server.Controllers
             }
             catch (ItemNotFoundException<Vacancy>)
             {
-                logger.LogWarning("PUT api/Vacancy/{RouteId}: vacancy with this ID does not exist", id);
+                logger.LogWarning("PATCH api/Vacancy/{RouteId}: vacancy with this ID does not exist", id);
                 return BadRequest();
             }
             catch (Exception e)
             {
-                logger.LogError(e, "PUT api/Vacancy/{RouteId}: unexpected failure during vacancy fetch", id);
+                logger.LogError(e, "PATCH api/Vacancy/{RouteId}: unexpected failure during vacancy fetch", id);
                 return StatusCode(500, "Updating the vacancy failed unexpectedly");
             }
             
@@ -96,29 +96,29 @@ namespace DemoBoard_server.Controllers
             if (!authorizationResult.Succeeded)
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                logger.LogInformation("PUT api/Vacancy/{id}): denied access attempt by account {UserId}", id, userId);
+                logger.LogInformation("PATCH api/Vacancy/{id}): denied access attempt by account {UserId}", id, userId);
                 return Forbid();
             }
 
             try
             {
                 await service.UpdateAsync(id, vacancyUpdate);
-                logger.LogInformation("PUT api/Vacancy/{RouteId}: updated ok", id);
+                logger.LogInformation("PATCH api/Vacancy/{RouteId}: updated ok", id);
                 return NoContent();
             }
             catch (ItemNotFoundException<Vacancy>)
             {
-                logger.LogWarning("PUT api/Vacancy/{RouteId}: vacancy with this ID does not exist", id);
+                logger.LogWarning("PATCH api/Vacancy/{RouteId}: vacancy with this ID does not exist", id);
                 return NotFound();
             }
             catch (DbUpdateConcurrencyException e)
             {
-                logger.LogWarning(e, "PUT api/Vacancy/{RouteId}: concurrency conflict", id);
+                logger.LogWarning(e, "PATCH api/Vacancy/{RouteId}: concurrency conflict", id);
                 return Conflict();      // error message here?
             }
             catch (Exception e) 
             {
-                logger.LogError(e, "PUT api/Vacancy/{RouteId}: unexpected failure", id);
+                logger.LogError(e, "PATCH api/Vacancy/{RouteId}: unexpected failure", id);
                 return StatusCode(500, "Updating the vacancy failed unexpectedly");
             }
         }

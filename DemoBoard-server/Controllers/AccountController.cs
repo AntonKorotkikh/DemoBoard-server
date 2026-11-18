@@ -93,7 +93,7 @@ namespace DemoBoard_server.Controllers
             try
             {
                 await service.UpdatePasswordAsync(userId, passwordUpdate);
-                logger.LogInformation("PATCH api/Account/password: updated ok (UserId: {UserId})", userId);
+                logger.LogInformation("PATCH api/Account/password: password for account {UserId} updated ok)", userId);
                 return NoContent();
             }
             catch (IncorrectCurrentPasswordException)
@@ -103,17 +103,17 @@ namespace DemoBoard_server.Controllers
             catch (InvalidNewPasswordException e)
             {
                 var errors = e.Errors.Select(error => $"{error.Code}: {error.Description}").ToList();
-                logger.LogInformation("PATCH api/Account/password: ChangePasswordAsync failed for user {UserId}. This is likely because the new password does not meet the requirements, but logging errors anyway in case this is something else: {errors}", userId, errors);
+                logger.LogInformation("PATCH api/Account/password: ChangePasswordAsync failed for account {UserId}. This is likely because the new password does not meet the requirements, but logging errors anyway in case this is something else: {errors}", userId, errors);
                 return Ok("The new password does not meet the requirements");
             }
             catch (DbUpdateConcurrencyException e)
             {
-                logger.LogWarning(e, "PATCH api/Account/password: concurrency conflict (UserId: {UserId})", userId);
+                logger.LogWarning(e, "PATCH api/Account/password: concurrency conflict during password update for account {UserId}", userId);
                 return Conflict();      // error message here?
             }
             catch (Exception e) 
             {
-                logger.LogError(e, "PATCH api/Account/password: unexpected failure (UserId: {UserId})", userId);
+                logger.LogError(e, "PATCH api/Account/password: unexpected failure during password update for account {UserId}", userId);
                 return StatusCode(500, "Updating the account password failed unexpectedly");
             }
         }
@@ -126,7 +126,7 @@ namespace DemoBoard_server.Controllers
             try
             {
                 var addedAccountId = await service.AddPersonAccountAsync(account);
-                logger.LogInformation("POST api/Account/person: added new account ok (ID: {Id})", addedAccountId);
+                logger.LogInformation("POST api/Account/person: new account {UserId} added ok", addedAccountId);
                 return CreatedAtAction(nameof(GetAccount), new { email = account.Email }, null);
             }
             catch (DuplicateItemException)
@@ -156,7 +156,7 @@ namespace DemoBoard_server.Controllers
             try
             {
                 var addedAccountId = await service.AddCompanyAccountAsync(account);
-                logger.LogInformation("POST api/Account/company: added new account ok (ID: {Id})", addedAccountId);
+                logger.LogInformation("POST api/Account/company: new account {UserId} added ok", addedAccountId);
                 return CreatedAtAction(nameof(GetAccount), new { email = account.Email }, null);
             }
             catch (DuplicateItemException)
@@ -186,12 +186,12 @@ namespace DemoBoard_server.Controllers
             try
             {
                 await service.Login(account);
-                logger.LogInformation("POST api/Account/login: user logged in ok (UserName: {UserName})", account.UserName);
+                logger.LogInformation("POST api/Account/login: user with username {UserName} logged in ok", account.UserName);
                 return Ok();
             }
             catch (LoginUnsuccessfulException)
             {
-                logger.LogInformation("POST api/Account/login: user failed to log in (UserName: {UserName})", account.UserName);
+                logger.LogInformation("POST api/Account/login: user with username {UserName} failed to log in", account.UserName);
                 return Unauthorized();
             }
             catch (Exception e)

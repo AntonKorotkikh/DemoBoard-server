@@ -35,7 +35,7 @@ public static class WebApplicationBuilderExtensions
 
     public static void AddSecurity(this IHostApplicationBuilder builder)
     {
-        builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+        builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<DatabaseContext>();
 

@@ -80,7 +80,7 @@ public class AccountService
         return user.Id;
     }
 
-    public async Task Login(AccountLoginDTO account)
+    public async Task LogIn(AccountLoginDTO account)
     {
         var result = await signInManager.PasswordSignInAsync(account.UserName, account.Password, isPersistent: true, lockoutOnFailure: false);
 

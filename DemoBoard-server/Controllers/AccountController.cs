@@ -181,11 +181,11 @@ namespace DemoBoard_server.Controllers
         // POST: api/Account/login
         [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<IActionResult> Login(AccountLoginDTO account)
+        public async Task<IActionResult> LogIn(AccountLoginDTO account)
         {
             try
             {
-                await service.Login(account);
+                await service.LogIn(account);
                 logger.LogInformation("POST api/Account/login: user with username {UserName} logged in ok", account.UserName);
                 return Ok();
             }

@@ -14,197 +14,196 @@ using DemoBoard_server.Repositories;
 using DemoBoard_server.Services;
 using Microsoft.AspNetCore.Authorization;
 
-namespace DemoBoard_server.Controllers
+namespace DemoBoard_server.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class VacancyController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class VacancyController : ControllerBase
+    private readonly VacancyService service;
+    private readonly ILogger<VacancyController> logger;
+    private readonly IAuthorizationService authorizationService;
+
+    public VacancyController(VacancyService service, ILogger<VacancyController> logger, IAuthorizationService authorizationService)
     {
-        private readonly VacancyService service;
-        private readonly ILogger<VacancyController> logger;
-        private readonly IAuthorizationService authorizationService;
+        this.service = service;
+        this.logger = logger;
+        this.authorizationService = authorizationService;
+    }
 
-        public VacancyController(VacancyService service, ILogger<VacancyController> logger, IAuthorizationService authorizationService)
+    // GET: api/Vacancy/recent
+    [AllowAnonymous]
+    [HttpGet("recent")]
+    public async Task<ActionResult<IEnumerable<VacancyDTO>>> GetRecentVacancies()
+    {
+        try
         {
-            this.service = service;
-            this.logger = logger;
-            this.authorizationService = authorizationService;
+            var recentVacancies = await service.GetRecentAsync();
+            var recentVacanciesDTOs = recentVacancies.Select(x => ToDTO(x));
+            return Ok(recentVacanciesDTOs);
         }
-
-        // GET: api/Vacancy/recent
-        [AllowAnonymous]
-        [HttpGet("recent")]
-        public async Task<ActionResult<IEnumerable<VacancyDTO>>> GetRecentVacancies()
+        catch (Exception e)
         {
-            try
-            {
-                var recentVacancies = await service.GetRecentAsync();
-                var recentVacanciesDTOs = recentVacancies.Select(x => ToDTO(x));
-                return Ok(recentVacanciesDTOs);
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, "GET api/Vacancy/recent: unexpected failure");
-                return StatusCode(500, "Fetching recent vacancies failed unexpectedly");
-            }
+            logger.LogError(e, "GET api/Vacancy/recent: unexpected failure");
+            return StatusCode(500, "Fetching recent vacancies failed unexpectedly");
         }
+    }
 
-        // GET: api/Vacancy/5
-        [AllowAnonymous]
-        [HttpGet("{id}")]
-        public async Task<ActionResult<VacancyDTO>> GetVacancy(long id)
+    // GET: api/Vacancy/5
+    [AllowAnonymous]
+    [HttpGet("{id}")]
+    public async Task<ActionResult<VacancyDTO>> GetVacancy(long id)
+    {
+        try
         {
-            try
-            {
-                var vacancy = await service.GetByIdAsync(id);
-                return ToDTO(vacancy);
-            }
-            catch (ItemNotFoundException<Vacancy>)
-            {
-                logger.LogWarning("GET api/Vacancy/{RouteId}: vacancy with this ID does not exist", id);
-                return NotFound();
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, "GET api/Vacancy/{RouteId}: unexpected failure", id);
-                return StatusCode(500, "Fetching the vacancy failed unexpectedly");
-            }
+            var vacancy = await service.GetByIdAsync(id);
+            return ToDTO(vacancy);
         }
-
-        // PATCH: api/Vacancy/5
-        [Authorize(Roles = "Admin, Company")]
-        [HttpPatch("{id}")]
-        public async Task<IActionResult> PatchVacancy(long id, VacancyUpdateDTO vacancyUpdate)
+        catch (ItemNotFoundException<Vacancy>)
         {
-            Vacancy vacancy;
-            try
-            {
-                vacancy = await service.GetByIdAsync(id);
-            }
-            catch (ItemNotFoundException<Vacancy>)
-            {
-                logger.LogWarning("PATCH api/Vacancy/{RouteId}: vacancy with this ID does not exist", id);
-                return BadRequest();
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, "PATCH api/Vacancy/{RouteId}: unexpected failure during vacancy fetch", id);
-                return StatusCode(500, "Updating the vacancy failed unexpectedly");
-            }
+            logger.LogWarning("GET api/Vacancy/{RouteId}: vacancy with this ID does not exist", id);
+            return NotFound();
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "GET api/Vacancy/{RouteId}: unexpected failure", id);
+            return StatusCode(500, "Fetching the vacancy failed unexpectedly");
+        }
+    }
+
+    // PATCH: api/Vacancy/5
+    [Authorize(Roles = "Admin, Company")]
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> PatchVacancy(long id, VacancyUpdateDTO vacancyUpdate)
+    {
+        Vacancy vacancy;
+        try
+        {
+            vacancy = await service.GetByIdAsync(id);
+        }
+        catch (ItemNotFoundException<Vacancy>)
+        {
+            logger.LogWarning("PATCH api/Vacancy/{RouteId}: vacancy with this ID does not exist", id);
+            return BadRequest();
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "PATCH api/Vacancy/{RouteId}: unexpected failure during vacancy fetch", id);
+            return StatusCode(500, "Updating the vacancy failed unexpectedly");
+        }
             
-            var authorizationResult = await authorizationService.AuthorizeAsync(User, vacancy, "SameAccountPolicy");
-            if (!authorizationResult.Succeeded)
-            {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                logger.LogInformation("PATCH api/Vacancy/{id}): denied access attempt by account {UserId}", id, userId);
-                return Forbid();
-            }
-
-            try
-            {
-                await service.UpdateAsync(id, vacancyUpdate);
-                logger.LogInformation("PATCH api/Vacancy/{RouteId}: updated ok", id);
-                return NoContent();
-            }
-            catch (ItemNotFoundException<Vacancy>)
-            {
-                logger.LogWarning("PATCH api/Vacancy/{RouteId}: vacancy with this ID does not exist", id);
-                return NotFound();
-            }
-            catch (DbUpdateConcurrencyException e)
-            {
-                logger.LogWarning(e, "PATCH api/Vacancy/{RouteId}: concurrency conflict", id);
-                return Conflict();      // error message here?
-            }
-            catch (Exception e) 
-            {
-                logger.LogError(e, "PATCH api/Vacancy/{RouteId}: unexpected failure", id);
-                return StatusCode(500, "Updating the vacancy failed unexpectedly");
-            }
-        }
-
-        // POST: api/Vacancy
-        [Authorize(Roles = "Admin, Company")]
-        [HttpPost]
-        public async Task<ActionResult<VacancyDTO>> PostVacancy(VacancyCreationDTO vacancy)
+        var authorizationResult = await authorizationService.AuthorizeAsync(User, vacancy, "SameAccountPolicy");
+        if (!authorizationResult.Succeeded)
         {
-            try
-            {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var addedVacancyId = await service.AddAsync(userId, vacancy);
-                logger.LogInformation("POST api/Vacancy: added new vacancy ok (ID: {id})", addedVacancyId);
-                return CreatedAtAction(nameof(GetVacancy), new { id = addedVacancyId }, vacancy);
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, "POST api/Vacancy: unexpected failure");
-                return StatusCode(500, "Adding a new vacancy failed unexpectedly");
-            }
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            logger.LogInformation("PATCH api/Vacancy/{id}): denied access attempt by account {UserId}", id, userId);
+            return Forbid();
         }
 
-        // DELETE: api/Vacancy/5
-        [Authorize(Roles = "Admin, Company")]
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteVacancy(long id)
+        try
         {
-            Vacancy vacancy;
-            try
-            {
-                vacancy = await service.GetByIdAsync(id);
-            }
-            catch (ItemNotFoundException<Vacancy>)
-            {
-                logger.LogWarning("DELETE api/Vacancy/{RouteId}: vacancy with this ID does not exist", id);
-                return BadRequest();
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, "DELETE api/Vacancy/{RouteId}: unexpected failure during vacancy fetch", id);
-                return StatusCode(500, "Deleting the vacancy failed unexpectedly");
-            }
-            
-            var authorizationResult = await authorizationService.AuthorizeAsync(User, vacancy, "SameAccountPolicy");
-            if (!authorizationResult.Succeeded)
-            {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                logger.LogInformation("DELETE api/Vacancy/{id}): denied access attempt by account {UserId}", id, userId);
-                return Forbid();
-            }
-            
-            try
-            {
-                await service.DeleteAsync(id);
-                return NoContent();
-            }
-            catch (ItemNotFoundException<Vacancy>)
-            {
-                logger.LogError("DELETE api/Vacancy/{RouteId}: vacancy with this ID does not exist DESPITE having found it moments ago during authorization", id);
-                return StatusCode(500, "Deleting the vacancy failed unexpectedly");
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, "DELETE api/Vacancy/{RouteId}: unexpected failure", id);
-                return StatusCode(500, "Deleting the vacancy failed unexpectedly");
-            }
+            await service.UpdateAsync(id, vacancyUpdate);
+            logger.LogInformation("PATCH api/Vacancy/{RouteId}: updated ok", id);
+            return NoContent();
         }
+        catch (ItemNotFoundException<Vacancy>)
+        {
+            logger.LogWarning("PATCH api/Vacancy/{RouteId}: vacancy with this ID does not exist", id);
+            return NotFound();
+        }
+        catch (DbUpdateConcurrencyException e)
+        {
+            logger.LogWarning(e, "PATCH api/Vacancy/{RouteId}: concurrency conflict", id);
+            return Conflict();      // error message here?
+        }
+        catch (Exception e) 
+        {
+            logger.LogError(e, "PATCH api/Vacancy/{RouteId}: unexpected failure", id);
+            return StatusCode(500, "Updating the vacancy failed unexpectedly");
+        }
+    }
+
+    // POST: api/Vacancy
+    [Authorize(Roles = "Admin, Company")]
+    [HttpPost]
+    public async Task<ActionResult<VacancyDTO>> PostVacancy(VacancyCreationDTO vacancy)
+    {
+        try
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var addedVacancyId = await service.AddAsync(userId, vacancy);
+            logger.LogInformation("POST api/Vacancy: added new vacancy ok (ID: {id})", addedVacancyId);
+            return CreatedAtAction(nameof(GetVacancy), new { id = addedVacancyId }, vacancy);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "POST api/Vacancy: unexpected failure");
+            return StatusCode(500, "Adding a new vacancy failed unexpectedly");
+        }
+    }
+
+    // DELETE: api/Vacancy/5
+    [Authorize(Roles = "Admin, Company")]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteVacancy(long id)
+    {
+        Vacancy vacancy;
+        try
+        {
+            vacancy = await service.GetByIdAsync(id);
+        }
+        catch (ItemNotFoundException<Vacancy>)
+        {
+            logger.LogWarning("DELETE api/Vacancy/{RouteId}: vacancy with this ID does not exist", id);
+            return BadRequest();
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "DELETE api/Vacancy/{RouteId}: unexpected failure during vacancy fetch", id);
+            return StatusCode(500, "Deleting the vacancy failed unexpectedly");
+        }
+            
+        var authorizationResult = await authorizationService.AuthorizeAsync(User, vacancy, "SameAccountPolicy");
+        if (!authorizationResult.Succeeded)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            logger.LogInformation("DELETE api/Vacancy/{id}): denied access attempt by account {UserId}", id, userId);
+            return Forbid();
+        }
+            
+        try
+        {
+            await service.DeleteAsync(id);
+            return NoContent();
+        }
+        catch (ItemNotFoundException<Vacancy>)
+        {
+            logger.LogError("DELETE api/Vacancy/{RouteId}: vacancy with this ID does not exist DESPITE having found it moments ago during authorization", id);
+            return StatusCode(500, "Deleting the vacancy failed unexpectedly");
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "DELETE api/Vacancy/{RouteId}: unexpected failure", id);
+            return StatusCode(500, "Deleting the vacancy failed unexpectedly");
+        }
+    }
         
-        private VacancyDTO ToDTO(Vacancy vacancy)
+    private VacancyDTO ToDTO(Vacancy vacancy)
+    {
+        var companyDTO = new CompanyResponseDTO()
         {
-            var companyDTO = new CompanyResponseDTO()
-            {
-                Id = vacancy.Company.Id,
-                LogoPath = vacancy.Company.LogoPath,
-                BusinessName = vacancy.Company.BusinessName
-            };
+            Id = vacancy.Company.Id,
+            LogoPath = vacancy.Company.LogoPath,
+            BusinessName = vacancy.Company.BusinessName
+        };
 
-            return new()
-            {
-                Id = vacancy.Id,
-                Title = vacancy.Title,
-                Description = vacancy.Description,
-                TimeAdded = vacancy.TimeAdded,
-                Company = companyDTO
-            };
-        }
+        return new()
+        {
+            Id = vacancy.Id,
+            Title = vacancy.Title,
+            Description = vacancy.Description,
+            TimeAdded = vacancy.TimeAdded,
+            Company = companyDTO
+        };
     }
 }

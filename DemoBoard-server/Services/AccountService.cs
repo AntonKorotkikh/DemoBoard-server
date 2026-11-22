@@ -88,9 +88,9 @@ public class AccountService
             throw new LoginUnsuccessfulException();
     }
 
-    public async Task DeleteAsync(string userName)
+    public async Task DeleteAsync(string userId)
     {
-        var user = await userManager.FindByNameAsync(userName);
+        var user = await userManager.FindByIdAsync(userId);
         if (user == null)
             throw new ItemNotFoundException<IdentityUser>();
         

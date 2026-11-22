@@ -27,7 +27,7 @@ public class PersonController : ControllerBase
     // GET: api/Person/5
     [Authorize(Roles = "Admin, Person")]
     [HttpGet("{id}")]
-    public async Task<ActionResult<PersonDTO>> GetPerson(long id)
+    public async Task<ActionResult<PersonResponseDTO>> GetPerson(long id)
     {
         Person person;
         try
@@ -56,7 +56,7 @@ public class PersonController : ControllerBase
         return ToDTO(person);
     }
     
-    private PersonDTO ToDTO(Person person)
+    private PersonResponseDTO ToDTO(Person person)
     {
         var accountResponseDTO = new AccountResponseDTO()
         {

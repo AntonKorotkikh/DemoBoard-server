@@ -34,7 +34,7 @@ public class VacancyController : ControllerBase
     // GET: api/Vacancy/recent
     [AllowAnonymous]
     [HttpGet("recent")]
-    public async Task<ActionResult<IEnumerable<VacancyDTO>>> GetRecentVacancies()
+    public async Task<ActionResult<IEnumerable<VacancyResponseDTO>>> GetRecentVacancies()
     {
         try
         {
@@ -52,7 +52,7 @@ public class VacancyController : ControllerBase
     // GET: api/Vacancy/5
     [AllowAnonymous]
     [HttpGet("{id}")]
-    public async Task<ActionResult<VacancyDTO>> GetVacancy(long id)
+    public async Task<ActionResult<VacancyResponseDTO>> GetVacancy(long id)
     {
         try
         {
@@ -126,7 +126,7 @@ public class VacancyController : ControllerBase
     // POST: api/Vacancy
     [Authorize(Roles = "Admin, Company")]
     [HttpPost]
-    public async Task<ActionResult<VacancyDTO>> PostVacancy(VacancyCreationDTO vacancy)
+    public async Task<ActionResult<VacancyResponseDTO>> PostVacancy(VacancyCreationDTO vacancy)
     {
         try
         {
@@ -188,7 +188,7 @@ public class VacancyController : ControllerBase
         }
     }
         
-    private VacancyDTO ToDTO(Vacancy vacancy)
+    private VacancyResponseDTO ToDTO(Vacancy vacancy)
     {
         var companyDTO = new CompanyResponseDTO()
         {

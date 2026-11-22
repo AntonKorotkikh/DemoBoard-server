@@ -2,7 +2,7 @@ using DemoBoard_server.Models;
 
 namespace DemoBoard_server.DTOs;
 
-public class VacancyDTO
+public class VacancyResponseDTO
 {
     public long Id { get; set; }
     public required string Title { get; set; }

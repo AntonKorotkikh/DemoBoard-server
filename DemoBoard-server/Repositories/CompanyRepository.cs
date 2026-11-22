@@ -13,7 +13,7 @@ public class CompanyRepository : Repository<Company>
     
     public async Task<Company> GetByAccountNameAsync(string accountName)
     {
-        var companyInDB = await context.Companies.FirstOrDefaultAsync(company => company.Account.UserName == accountName);
+        var companyInDB = await context.Companies.FirstOrDefaultAsync(company => company.Owner.UserName == accountName);
         
         return companyInDB ?? throw new ItemNotFoundException<Company>();
     }

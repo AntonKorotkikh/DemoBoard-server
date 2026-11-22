@@ -26,7 +26,6 @@ public class CompanyService
     {
         var companyToAdd = new Company()
         {
-            Account = account,
             LogoPath = "",          // not implemented
             BusinessName = companyAccountCreation.BusinessName,
             Owner = account
@@ -53,7 +52,6 @@ public class CompanyService
         var updatedCompany = new Company()
         {
             Id = company.Id,
-            Account = account,
             LogoPath = companyUpdate.LogoPath ?? company.LogoPath,
             BusinessName = companyUpdate.BusinessName ?? company.BusinessName,
             Owner = company.Owner

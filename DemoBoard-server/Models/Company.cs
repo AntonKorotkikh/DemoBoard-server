@@ -8,7 +8,6 @@ namespace DemoBoard_server.Models;
 public class Company : IEntity, IUserOwnedResource
 {
     public long Id { get; set; }
-    public virtual required IdentityUser Account { get; set; }
     public string? LogoPath { get; set; }
     public required string BusinessName { get; set; }
     public virtual required IdentityUser Owner { get; set; }
